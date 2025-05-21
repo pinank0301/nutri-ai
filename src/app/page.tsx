@@ -32,9 +32,9 @@ export default function HomePage() {
               </div>
             </div>
             <Image
-              src="https://placehold.co/650x450.png"
-              alt="Healthy food and lifestyle"
-              data-ai-hint="healthy food lifestyle"
+              src="https://firebasestudio.corp.google.com/static/agents/prototyper/assets/hero_image_healthy_food_bowl.png"
+              alt="Healthy salad bowl with eggs, avocado, chickpeas, blueberries, and tomatoes"
+              data-ai-hint="healthy food"
               width={650}
               height={450}
               className="mx-auto aspect-[16/10] overflow-hidden rounded-xl object-cover sm:w-full lg:order-last shadow-2xl"
