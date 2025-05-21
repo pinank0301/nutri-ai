@@ -32,7 +32,7 @@ export default function HomePage() {
               </div>
             </div>
             <Image
-              src="https://firebasestudio.corp.google.com/static/agents/prototyper/assets/hero_image_healthy_food_bowl.png"
+              src="/hero_image_healthy_food_bowl.png"
               alt="Healthy salad bowl with eggs, avocado, chickpeas, blueberries, and tomatoes"
               data-ai-hint="healthy food"
               width={650}
