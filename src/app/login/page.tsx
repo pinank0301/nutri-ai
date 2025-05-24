@@ -38,14 +38,15 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (error) {
       const firebaseError = error as FirebaseError;
-      console.error("Error signing in with Google:", firebaseError);
       if (firebaseError.code === "auth/popup-closed-by-user") {
+        console.info("Firebase sign-in popup closed by user:", firebaseError.message);
         toast({
           title: "Sign-in Cancelled",
           description: "You closed the sign-in popup. Please try again if you wish to sign in.",
           variant: "default",
         });
       } else {
+        console.error("Error signing in with Google:", firebaseError);
         toast({
           title: "Sign-in Failed",
           description: firebaseError.message || "An unexpected error occurred during sign-in. Please try again.",
