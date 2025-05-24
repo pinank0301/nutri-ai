@@ -37,19 +37,29 @@ export default function LoginPage() {
       await signInWithPopup(auth, googleProvider);
       router.push("/dashboard");
     } catch (error) {
-      const firebaseError = error as FirebaseError;
-      if (firebaseError.code === "auth/popup-closed-by-user") {
-        // console.info("Firebase sign-in popup closed by user:", firebaseError.message); // Removed this line
-        toast({
-          title: "Sign-in Cancelled",
-          description: "You closed the sign-in popup. Please try again if you wish to sign in.",
-          variant: "default",
-        });
+      // More robust error checking
+      if (error instanceof Error && 'code' in error) {
+        const firebaseError = error as FirebaseError; // Type assertion
+        if (firebaseError.code === "auth/popup-closed-by-user") {
+          toast({
+            title: "Sign-in Cancelled",
+            description: "The sign-in popup was closed before completion. Please try again if you wish to sign in.",
+            variant: "default",
+          });
+        } else {
+          console.error("Error signing in with Google:", firebaseError);
+          toast({
+            title: "Sign-in Failed",
+            description: firebaseError.message || "An unexpected error occurred during sign-in. Please try again.",
+            variant: "destructive",
+          });
+        }
       } else {
-        console.error("Error signing in with Google:", firebaseError);
+        // Handle cases where the error might not be a FirebaseError or have a 'code'
+        console.error("An unexpected non-Firebase error occurred during sign-in:", error);
         toast({
           title: "Sign-in Failed",
-          description: firebaseError.message || "An unexpected error occurred during sign-in. Please try again.",
+          description: "An unexpected error occurred. Please try again.",
           variant: "destructive",
         });
       }
