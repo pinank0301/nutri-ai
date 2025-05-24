@@ -39,7 +39,7 @@ export default function LoginPage() {
     } catch (error) {
       const firebaseError = error as FirebaseError;
       if (firebaseError.code === "auth/popup-closed-by-user") {
-        console.info("Firebase sign-in popup closed by user:", firebaseError.message);
+        // console.info("Firebase sign-in popup closed by user:", firebaseError.message); // Removed this line
         toast({
           title: "Sign-in Cancelled",
           description: "You closed the sign-in popup. Please try again if you wish to sign in.",
@@ -98,4 +98,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
