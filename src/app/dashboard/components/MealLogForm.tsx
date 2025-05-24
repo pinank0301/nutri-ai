@@ -20,12 +20,13 @@ import { useToast } from "@/hooks/use-toast";
 import { analyzeLoggedMeals } from "@/ai/flows/analyze-logged-meals";
 import type { AnalyzeLoggedMealsOutput } from "@/ai/flows/analyze-logged-meals";
 import type { UserProfile, DietRecommendationData } from "@/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, NotebookText, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
 
 const mealLogFormSchema = z.object({
-  loggedMeals: z.string().min(10, "Please describe your meals in at least 10 characters."),
+  loggedMeals: z.string().min(1, "Please describe your meals.").optional(), // Optional to allow empty initial state
 });
 
 type MealLogFormValues = z.infer<typeof mealLogFormSchema>;
@@ -35,8 +36,11 @@ interface MealLogFormProps {
   currentRecommendation: DietRecommendationData | null;
 }
 
+const getMealLogStorageKey = (userId: string) => `mealLogs_${userId}`;
+
 export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalyzeLoggedMealsOutput | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -48,18 +52,42 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
     },
   });
 
+  // Load meals from localStorage when selectedDate or user changes
+  useEffect(() => {
+    if (user && selectedDate) {
+      const dateKey = format(selectedDate, "yyyy-MM-dd");
+      const storageKey = getMealLogStorageKey(user.uid);
+      try {
+        const allLogsRaw = localStorage.getItem(storageKey);
+        const allLogs = allLogsRaw ? JSON.parse(allLogsRaw) : {};
+        const mealsForDate = allLogs[dateKey] || "";
+        form.setValue("loggedMeals", mealsForDate);
+      } catch (error) {
+        console.error("Error loading meals from localStorage:", error);
+        form.setValue("loggedMeals", "");
+      }
+    } else {
+      form.setValue("loggedMeals", ""); // Clear if no user or date
+    }
+  }, [selectedDate, user, form]);
+
+  // Clear analysis result when selectedDate changes
+  useEffect(() => {
+    setAnalysisResult(null);
+  }, [selectedDate]);
+
   async function onSubmit(data: MealLogFormValues) {
     if (!currentRecommendation || !currentRecommendation.recommendation) {
       toast({
         title: "Missing Information",
-        description: "Please generate a diet recommendation first.",
+        description: "Please generate a diet recommendation first to compare against.",
         variant: "destructive",
       });
       return;
     }
 
     if (!userProfile.age || !userProfile.weight) {
-         toast({
+      toast({
         title: "Missing Profile Information",
         description: "Please complete your profile information in the Profile tab.",
         variant: "destructive",
@@ -76,15 +104,67 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "User not found",
+        description: "Please ensure you are logged in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const loggedMealsContent = data.loggedMeals || "";
+    if (loggedMealsContent.trim().length < 10 && loggedMealsContent.trim().length > 0) {
+         toast({
+        title: "Meals too short",
+        description: "Please describe your meals in at least 10 characters, or leave it empty if you ate nothing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+
     setIsLoading(true);
     setAnalysisResult(null);
+
+    // Save meals to localStorage
+    try {
+      const dateKey = format(selectedDate, "yyyy-MM-dd");
+      const storageKey = getMealLogStorageKey(user.uid);
+      const allLogsRaw = localStorage.getItem(storageKey);
+      const allLogs = allLogsRaw ? JSON.parse(allLogsRaw) : {};
+      if (loggedMealsContent.trim() === "") {
+        delete allLogs[dateKey]; // Remove entry if textarea is empty
+      } else {
+        allLogs[dateKey] = loggedMealsContent;
+      }
+      localStorage.setItem(storageKey, JSON.stringify(allLogs));
+    } catch (error) {
+      console.error("Error saving meals to localStorage:", error);
+      toast({
+        title: "Storage Error",
+        description: "Could not save meal log locally.",
+        variant: "destructive"
+      });
+    }
+    
+    // If no meals logged, don't call AI
+    if (loggedMealsContent.trim() === "") {
+      toast({
+        title: "No Meals Logged",
+        description: `No meals were entered for ${format(selectedDate, "PPP")}. Entry cleared.`,
+      });
+      setIsLoading(false);
+      return;
+    }
+
 
     const userProfileString = `Age: ${userProfile.age}, Weight: ${userProfile.weight}kg, Activity Level: ${userProfile.activityLevel}, Dietary Goals: ${userProfile.dietaryGoals}, Dietary Preference: ${userProfile.dietaryPreference}`;
 
     try {
       const result = await analyzeLoggedMeals({
         recommendedDiet: currentRecommendation.recommendation,
-        loggedMeals: data.loggedMeals, // These are meals for the selectedDate
+        loggedMeals: loggedMealsContent,
         userProfile: userProfileString,
       });
       setAnalysisResult(result);
@@ -95,7 +175,7 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
     } catch (error) {
       console.error("Failed to analyze logged meals:", error);
       toast({
-        title: "Error",
+        title: "Analysis Error",
         description: "Failed to analyze meals. Please try again.",
         variant: "destructive",
       });
@@ -103,6 +183,8 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
       setIsLoading(false);
     }
   }
+  
+  const watchedLoggedMeals = form.watch("loggedMeals") || "";
 
   return (
     <div className="space-y-8">
@@ -113,7 +195,7 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
             Log Your Meals
           </CardTitle>
           <CardDescription>
-            Select a date and enter the meals you've consumed for an AI-powered analysis.
+            Select a date, log your meals, and get an AI-powered analysis. Your logs are saved locally per day.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -122,8 +204,11 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border shadow-sm"
+                onSelect={(date) => {
+                  setSelectedDate(date);
+                  // form.reset({ loggedMeals: "" }); // Reset form field for new date, useEffect will load it
+                }}
+                className="rounded-md border shadow-sm bg-card"
                 disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
               />
                <p className="text-sm text-center mt-2 text-muted-foreground">
@@ -145,10 +230,11 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder={`e.g., Breakfast: Oatmeal with berries and nuts. Lunch: Grilled chicken salad...\n(Meals for ${selectedDate ? format(selectedDate, "PPP") : 'selected date'})`}
+                            placeholder={`e.g., Breakfast: Oatmeal with berries...\n(Leave empty if you ate nothing on ${selectedDate ? format(selectedDate, "PPP") : 'selected date'})`}
                             className="min-h-[150px]"
                             {...field}
-                            disabled={!selectedDate}
+                            value={field.value || ""} // Ensure controlled component
+                            disabled={!selectedDate || !user}
                           />
                         </FormControl>
                         <FormMessage />
@@ -157,16 +243,23 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
                   />
                   <Button 
                     type="submit" 
-                    disabled={isLoading || !userProfile.age || !userProfile.weight || !selectedDate || form.watch('loggedMeals').length < 10} 
+                    disabled={
+                        isLoading || 
+                        !userProfile.age || 
+                        !userProfile.weight || 
+                        !selectedDate || 
+                        !user ||
+                        (watchedLoggedMeals.trim().length > 0 && watchedLoggedMeals.trim().length < 10)
+                    }
                     className="w-full md:w-auto"
                   >
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
+                        Analyzing & Saving...
                       </>
                     ) : (
-                      "Analyze Meals for Selected Date"
+                       watchedLoggedMeals.trim() === "" ? "Clear Log for Date" : "Analyze & Save Meals"
                     )}
                   </Button>
                   {(!userProfile.age || !userProfile.weight) && (
@@ -174,11 +267,21 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
                     Please complete your age and weight in the Profile tab before analyzing meals.
                   </p>
                   )}
+                   {!user && (
+                    <p className="text-sm text-destructive">
+                      Please log in to save and analyze meals.
+                    </p>
+                  )}
                   {!selectedDate && (
                     <p className="text-sm text-destructive">
                       Please select a date from the calendar.
                     </p>
                   )}
+                   {(watchedLoggedMeals.trim().length > 0 && watchedLoggedMeals.trim().length < 10) && (
+                     <p className="text-sm text-destructive">
+                       Please describe your meals in at least 10 characters, or leave it empty.
+                     </p>
+                   )}
                 </form>
               </Form>
             </div>
@@ -190,15 +293,16 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
         <Card>
           <CardHeader>
             <CardTitle>Meal Analysis Results for {selectedDate ? format(selectedDate, "PPP") : ""}</CardTitle>
+            <CardDescription>These results are based on the meals you logged for the selected date.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <h3 className="font-semibold text-lg">Alignment Assessment:</h3>
-              <p className="text-muted-foreground">{analysisResult.alignmentAssessment}</p>
+              <p className="text-muted-foreground whitespace-pre-wrap">{analysisResult.alignmentAssessment}</p>
             </div>
             <div>
               <h3 className="font-semibold text-lg">Suggestions:</h3>
-              <p className="text-muted-foreground">{analysisResult.suggestions}</p>
+              <p className="text-muted-foreground whitespace-pre-wrap">{analysisResult.suggestions}</p>
             </div>
           </CardContent>
         </Card>
@@ -206,3 +310,4 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
     </div>
   );
 }
+
