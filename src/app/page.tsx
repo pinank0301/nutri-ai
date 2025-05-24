@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import heroImageFromFile from '../public/hero.jpg';
 
 export default function HomePage() {
   return (
@@ -33,7 +34,7 @@ export default function HomePage() {
               </div>
             </div>
             <Image
-              src="/hero.jpg"
+              src={heroImageFromFile}
               alt="Healthy food for a balanced diet"
               data-ai-hint="healthy food"
               width={650}
