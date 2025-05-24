@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -32,8 +33,8 @@ export default function HomePage() {
               </div>
             </div>
             <Image
-              src="/five-tips-for-a-healthy-diet.jpg"
-              alt="Healthy salad bowl with eggs, avocado, chickpeas, blueberries, and tomatoes"
+              src="/hero.jpg"
+              alt="Healthy food for a balanced diet"
               data-ai-hint="healthy food"
               width={650}
               height={450}
