@@ -50,7 +50,7 @@ export function Header() {
   const visibleNavLinks = navLinks.filter(link => !link.protected || (link.protected && user));
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-gradient-to-b from-background/95 to-background/85 backdrop-blur supports-[backdrop-filter]:bg-gradient-to-b supports-[backdrop-filter]:from-background/60 supports-[backdrop-filter]:to-background/50">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <NutriAILogo className="h-6 w-6 text-primary" />

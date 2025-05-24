@@ -8,7 +8,7 @@ import heroImageFromFile from '../public/hero.jpg';
 export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center">
-      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-background to-secondary/30">
+      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-r from-primary/10 via-background to-secondary/20">
         <div className="container px-4 md:px-6">
           <div className="grid gap-6 lg:grid-cols-[1fr_550px] lg:gap-12 xl:grid-cols-[1fr_650px]">
             <div className="flex flex-col justify-center space-y-4">
@@ -58,19 +58,19 @@ export default function HomePage() {
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 lg:max-w-none mt-12">
-            <div className="grid gap-1 p-6 rounded-lg border bg-card shadow-sm">
+            <div className="grid gap-1 p-6 rounded-lg border bg-gradient-to-br from-card via-muted/20 to-card shadow-sm">
               <h3 className="text-lg font-bold text-primary">Personalized Recommendations</h3>
               <p className="text-sm text-muted-foreground">
                 AI crafts diet plans based on your unique profile and goals.
               </p>
             </div>
-            <div className="grid gap-1 p-6 rounded-lg border bg-card shadow-sm">
+            <div className="grid gap-1 p-6 rounded-lg border bg-gradient-to-br from-card via-muted/20 to-card shadow-sm">
               <h3 className="text-lg font-bold text-primary">Meal Visualizer</h3>
               <p className="text-sm text-muted-foreground">
                 See appealing images of your recommended meals.
               </p>
             </div>
-            <div className="grid gap-1 p-6 rounded-lg border bg-card shadow-sm">
+            <div className="grid gap-1 p-6 rounded-lg border bg-gradient-to-br from-card via-muted/20 to-card shadow-sm">
               <h3 className="text-lg font-bold text-primary">Meal Logging & Analysis</h3>
               <p className="text-sm text-muted-foreground">
                 Track your intake and get AI feedback on your progress.
