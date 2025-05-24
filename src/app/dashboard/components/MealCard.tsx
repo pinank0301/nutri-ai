@@ -1,9 +1,14 @@
+
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import type { MealSchema } from '@/ai/flows/generate-diet-recommendation'; // Ensure this type is exported or defined appropriately
+import type { MealSchema as MealZodSchemaType } from '@/ai/flows/generate-diet-recommendation'; 
+import type { z } from 'zod';
+
+// Use z.infer to get the TypeScript type from the Zod schema
+type MealSchema = z.infer<typeof MealZodSchemaType>;
 
 interface MealCardProps {
-  meal: Zod.infer<typeof MealSchema>; // Use Zod.infer if MealSchema is a Zod schema instance
+  meal: MealSchema; 
 }
 
 export function MealCard({ meal }: MealCardProps) {
@@ -17,7 +22,7 @@ export function MealCard({ meal }: MealCardProps) {
               alt={meal.name}
               layout="fill"
               objectFit="cover"
-              data-ai-hint="food meal" // Generic hint for placeholder generation
+              data-ai-hint="food meal" 
             />
            </div>
         ) : (

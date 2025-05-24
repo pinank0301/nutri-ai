@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,8 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { UserProfile } from "@/types";
-import { activityLevels, dietaryGoalsOptions } from "@/types";
+import type { UserProfile, DietaryPreference } from "@/types";
+import { activityLevels, dietaryGoalsOptions, dietaryPreferenceOptions } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "lucide-react";
 
@@ -32,6 +32,7 @@ const profileFormSchema = z.object({
   weight: z.coerce.number().min(1, "Weight is required").max(500),
   activityLevel: z.string().min(1, "Activity level is required"),
   dietaryGoals: z.string().min(1, "Dietary goal is required"),
+  dietaryPreference: z.enum(['any', 'veg', 'non-veg', 'vegan']).default('any'),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -50,6 +51,7 @@ export function UserProfileForm({ profile, onProfileUpdate }: UserProfileFormPro
       weight: profile.weight ?? undefined,
       activityLevel: profile.activityLevel || activityLevels[0].value,
       dietaryGoals: profile.dietaryGoals || dietaryGoalsOptions[0].value,
+      dietaryPreference: profile.dietaryPreference || dietaryPreferenceOptions[0].value as DietaryPreference,
     },
     mode: "onChange",
   });
@@ -144,6 +146,30 @@ export function UserProfileForm({ profile, onProfileUpdate }: UserProfileFormPro
                       {dietaryGoalsOptions.map((goal) => (
                         <SelectItem key={goal.value} value={goal.value}>
                           {goal.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="dietaryPreference"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dietary Preference</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your dietary preference" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {dietaryPreferenceOptions.map((preference) => (
+                        <SelectItem key={preference.value} value={preference.value}>
+                          {preference.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

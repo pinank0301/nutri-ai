@@ -1,10 +1,14 @@
+
 import type { GenerateDietRecommendationOutput, GenerateDietRecommendationInput } from "@/ai/flows/generate-diet-recommendation";
+
+export type DietaryPreference = 'any' | 'veg' | 'non-veg' | 'vegan';
 
 export type UserProfile = {
   age: number | undefined;
   weight: number | undefined;
   activityLevel: string;
   dietaryGoals: string;
+  dietaryPreference: DietaryPreference;
 };
 
 export type DietRecommendationData = GenerateDietRecommendationOutput;
@@ -19,6 +23,7 @@ export const mapUserProfileToDietInput = (profile: UserProfile): GenerateDietRec
     weight: profile.weight,
     activityLevel: profile.activityLevel,
     dietaryGoals: profile.dietaryGoals,
+    dietaryPreference: profile.dietaryPreference,
   };
 };
 
@@ -35,4 +40,11 @@ export const dietaryGoalsOptions = [
   { value: 'gain_muscle', label: 'Gain Muscle' },
   { value: 'maintain_weight', label: 'Maintain Weight' },
   { value: 'healthy_eating', label: 'General Healthy Eating' },
+];
+
+export const dietaryPreferenceOptions: Array<{value: DietaryPreference, label: string}> = [
+  { value: 'any', label: 'Any' },
+  { value: 'veg', label: 'Vegetarian' },
+  { value: 'non-veg', label: 'Non-Vegetarian' },
+  { value: 'vegan', label: 'Vegan' },
 ];

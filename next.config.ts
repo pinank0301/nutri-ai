@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -19,6 +20,18 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'firebasestudio.corp.google.com',
+        port: '',
+        pathname: '/**',
+      },
+      { // For Firebase Google Sign-In avatars
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      { // For Firebase GitHub Sign-In avatars
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
         port: '',
         pathname: '/**',
       }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,7 +58,7 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
     if (!userProfile.age || !userProfile.weight) {
          toast({
         title: "Missing Profile Information",
-        description: "Please complete your profile information.",
+        description: "Please complete your profile information in the Profile tab.",
         variant: "destructive",
       });
       return;
@@ -67,7 +68,7 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
     setIsLoading(true);
     setAnalysisResult(null);
 
-    const userProfileString = `Age: ${userProfile.age}, Weight: ${userProfile.weight}kg, Activity Level: ${userProfile.activityLevel}, Dietary Goals: ${userProfile.dietaryGoals}`;
+    const userProfileString = `Age: ${userProfile.age}, Weight: ${userProfile.weight}kg, Activity Level: ${userProfile.activityLevel}, Dietary Goals: ${userProfile.dietaryGoals}, Dietary Preference: ${userProfile.dietaryPreference}`;
 
     try {
       const result = await analyzeLoggedMeals({
@@ -124,7 +125,7 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
+              <Button type="submit" disabled={isLoading || !userProfile.age || !userProfile.weight} className="w-full md:w-auto">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -134,6 +135,11 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
                   "Analyze Meals"
                 )}
               </Button>
+              {(!userProfile.age || !userProfile.weight) && (
+              <p className="text-sm text-destructive">
+                Please complete your age and weight in the Profile tab before analyzing meals.
+              </p>
+            )}
             </form>
           </Form>
         </CardContent>
@@ -159,3 +165,4 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
     </div>
   );
 }
+

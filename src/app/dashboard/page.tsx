@@ -1,56 +1,101 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserProfileForm } from "./components/UserProfileForm";
 import { DietRecommendationForm } from "./components/DietRecommendationForm";
 import { MealCard } from "./components/MealCard";
 import { MealLogForm } from "./components/MealLogForm";
-import type { UserProfile, DietRecommendationData } from "@/types";
-import { activityLevels, dietaryGoalsOptions } from "@/types";
+import type { UserProfile, DietRecommendationData, DietaryPreference } from "@/types";
+import { activityLevels, dietaryGoalsOptions, dietaryPreferenceOptions } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Utensils, User, NotebookText, Lightbulb } from "lucide-react";
+import { Utensils, User, NotebookText, Lightbulb, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const initialProfile: UserProfile = {
   age: undefined,
   weight: undefined,
   activityLevel: activityLevels[0].value,
   dietaryGoals: dietaryGoalsOptions[0].value,
+  dietaryPreference: dietaryPreferenceOptions[0].value as DietaryPreference,
 };
 
-export default function DashboardPage() {
+function DashboardPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, loading: authLoading } = useAuth();
+  
   const [isClient, setIsClient] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>(initialProfile);
   const [dietRecommendation, setDietRecommendation] = useState<DietRecommendationData | null>(null);
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || "recommendation");
 
   useEffect(() => {
     setIsClient(true);
-    // Potentially load profile from localStorage here in a real app
-  }, []);
+    // In a real app, you'd load profile from Firestore based on user.uid
+    // For now, we'll reset profile if user changes or on initial load with a user
+    if (user) {
+        // Placeholder: load from localStorage or set to initial if new user
+        const storedProfile = localStorage.getItem(`userProfile_${user.uid}`);
+        if (storedProfile) {
+            setUserProfile(JSON.parse(storedProfile));
+        } else {
+            setUserProfile(initialProfile);
+        }
+    } else if (!authLoading) {
+      // If not loading and no user, redirect to login
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && (tab === "recommendation" || tab === "log" || tab === "profile")) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const handleProfileUpdate = (updatedProfile: UserProfile) => {
     setUserProfile(updatedProfile);
-    // Potentially save profile to localStorage here
+    if (user) {
+        localStorage.setItem(`userProfile_${user.uid}`, JSON.stringify(updatedProfile));
+    }
   };
 
   const handleRecommendationGenerated = (recommendation: DietRecommendationData) => {
     setDietRecommendation(recommendation);
   };
 
-  if (!isClient) {
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    router.push(`/dashboard?tab=${value}`, { scroll: false });
+  };
+
+
+  if (authLoading || !isClient) {
     return (
-      <div className="space-y-8">
-        <Skeleton className="h-12 w-1/3" />
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (!user) {
+    // This case should ideally be handled by the redirect in useEffect,
+    // but as a fallback:
+     return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+        <p>Redirecting to login...</p>
+        <Loader2 className="ml-2 h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <Tabs defaultValue="recommendation" className="w-full">
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-8">
         <TabsTrigger value="recommendation" className="gap-2">
           <Lightbulb className="h-4 w-4" /> Diet Plan
@@ -101,5 +146,18 @@ export default function DashboardPage() {
         <UserProfileForm profile={userProfile} onProfileUpdate={handleProfileUpdate} />
       </TabsContent>
     </Tabs>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    // Suspense boundary for useSearchParams usage
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    }>
+      <DashboardPageContent />
+    </Suspense>
   );
 }

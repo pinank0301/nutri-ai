@@ -1,3 +1,4 @@
+
 // use server'
 'use server';
 /**
@@ -10,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import type { DietaryPreference } from '@/types';
 
 const GenerateDietRecommendationInputSchema = z.object({
   age: z.number().describe('The age of the user in years.'),
@@ -22,6 +24,7 @@ const GenerateDietRecommendationInputSchema = z.object({
   dietaryGoals: z
     .string()
     .describe('The dietary goals of the user (e.g., lose weight, gain muscle, maintain weight).'),
+  dietaryPreference: z.custom<DietaryPreference>().describe('The dietary preference of the user (e.g., any, veg, non-veg, vegan).'),
 });
 export type GenerateDietRecommendationInput = z.infer<
   typeof GenerateDietRecommendationInputSchema
@@ -36,6 +39,7 @@ const MealSchema = z.object({
       "A photo of the meal, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
+export type { MealSchema }; // Exporting the Zod schema directly for MealCard
 
 const GenerateDietRecommendationOutputSchema = z.object({
   recommendation: z
@@ -59,14 +63,15 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateDietRecommendationOutputSchema},
   prompt: `You are an expert nutritionist specializing in creating personalized diet recommendations.
 
-You will use the age, weight, activity level, and dietary goals to generate a diet recommendation, including suggested foods and portion sizes for each meal.
+You will use the age, weight, activity level, dietary goals, and dietary preference to generate a diet recommendation, including suggested foods and portion sizes for each meal.
 
 Age: {{{age}}}
 Weight: {{{weight}}}
 Activity Level: {{{activityLevel}}}
 Dietary Goals: {{{dietaryGoals}}}
+Dietary Preference: {{{dietaryPreference}}}
 
-Based on this information, provide a personalized diet recommendation.
+Based on this information, provide a personalized diet recommendation. Ensure the meals align with the specified dietary preference (e.g., if 'veg', only suggest vegetarian meals; if 'vegan', only vegan meals; if 'non-veg', can include meat/fish; if 'any', provide a balanced mix or general healthy options).
 
 Output should be a JSON object:
 {
@@ -99,7 +104,7 @@ const generateDietRecommendationFlow = ai.defineFlow(
         const {media} = await ai.generate({
           model: 'googleai/gemini-2.0-flash-exp',
           prompt: [
-            {text: `Generate an image of ${meal.name}`},
+            {text: `Generate an image of ${meal.name} (${input.dietaryPreference === 'any' ? 'food' : input.dietaryPreference})`},
             {text: meal.description},
           ],
           config: {
@@ -112,3 +117,4 @@ const generateDietRecommendationFlow = ai.defineFlow(
     return output!;
   }
 );
+

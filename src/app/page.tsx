@@ -32,7 +32,7 @@ export default function HomePage() {
               </div>
             </div>
             <Image
-              src="/hero_image_healthy_food_bowl.png"
+              src="/five-tips-for-a-healthy-diet.jpg"
               alt="Healthy salad bowl with eggs, avocado, chickpeas, blueberries, and tomatoes"
               data-ai-hint="healthy food"
               width={650}

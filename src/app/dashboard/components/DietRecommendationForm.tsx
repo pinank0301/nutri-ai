@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,8 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { UserProfile, DietRecommendationData } from "@/types";
-import { activityLevels, dietaryGoalsOptions, mapUserProfileToDietInput } from "@/types";
+import type { UserProfile, DietRecommendationData, DietaryPreference } from "@/types";
+import { activityLevels, dietaryGoalsOptions, dietaryPreferenceOptions, mapUserProfileToDietInput } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { generateDietRecommendation } from "@/ai/flows/generate-diet-recommendation";
 import { useState, useEffect } from "react";
@@ -33,6 +34,7 @@ const recommendationFormSchema = z.object({
   weight: z.coerce.number().min(1, "Weight is required").max(500),
   activityLevel: z.string().min(1, "Activity level is required"),
   dietaryGoals: z.string().min(1, "Dietary goal is required"),
+  dietaryPreference: z.enum(['any', 'veg', 'non-veg', 'vegan']).default('any'),
 });
 
 type RecommendationFormValues = z.infer<typeof recommendationFormSchema>;
@@ -53,23 +55,34 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
       weight: userProfile.weight ?? undefined,
       activityLevel: userProfile.activityLevel || activityLevels[0].value,
       dietaryGoals: userProfile.dietaryGoals || dietaryGoalsOptions[0].value,
+      dietaryPreference: userProfile.dietaryPreference || dietaryPreferenceOptions[0].value as DietaryPreference,
     },
     mode: "onChange",
   });
 
   useEffect(() => {
+    // Update form when userProfile prop changes (e.g. after profile update)
     form.reset({
       age: userProfile.age ?? undefined,
       weight: userProfile.weight ?? undefined,
       activityLevel: userProfile.activityLevel || activityLevels[0].value,
       dietaryGoals: userProfile.dietaryGoals || dietaryGoalsOptions[0].value,
+      dietaryPreference: userProfile.dietaryPreference || dietaryPreferenceOptions[0].value as DietaryPreference,
     });
   }, [userProfile, form]);
 
  async function onSubmit(data: RecommendationFormValues) {
     setIsLoading(true);
     try {
-      const input = mapUserProfileToDietInput(data as UserProfile);
+      // Construct the full UserProfile object to pass to mapUserProfileToDietInput
+      const fullProfile: UserProfile = {
+        age: data.age,
+        weight: data.weight,
+        activityLevel: data.activityLevel,
+        dietaryGoals: data.dietaryGoals,
+        dietaryPreference: data.dietaryPreference,
+      };
+      const input = mapUserProfileToDietInput(fullProfile);
       const recommendation = await generateDietRecommendation(input);
       onRecommendationGenerated(recommendation);
       toast({
@@ -80,7 +93,7 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
       console.error("Failed to generate diet recommendation:", error);
       toast({
         title: "Error",
-        description: "Failed to generate diet recommendation. Please try again.",
+        description: (error as Error)?.message || "Failed to generate diet recommendation. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -96,7 +109,7 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
           Get Your Personalized Diet Plan
         </CardTitle>
         <CardDescription>
-          Fill in your details below, and our AI will generate a diet plan tailored just for you.
+          Review or update your details below, and our AI will generate a diet plan tailored just for you.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -136,7 +149,7 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Activity Level</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select activity level" />
@@ -160,7 +173,7 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Dietary Goals</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select dietary goal" />
@@ -178,7 +191,31 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
+            <FormField
+              control={form.control}
+              name="dietaryPreference"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dietary Preference</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select dietary preference" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {dietaryPreferenceOptions.map((preference) => (
+                        <SelectItem key={preference.value} value={preference.value}>
+                          {preference.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={isLoading || !userProfile.age || !userProfile.weight} className="w-full md:w-auto">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -188,9 +225,15 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
                 "Generate Diet Plan"
               )}
             </Button>
+             {(!userProfile.age || !userProfile.weight) && (
+              <p className="text-sm text-destructive">
+                Please complete your age and weight in the Profile tab before generating a diet plan.
+              </p>
+            )}
           </form>
         </Form>
       </CardContent>
     </Card>
   );
 }
+
