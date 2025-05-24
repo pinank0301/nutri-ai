@@ -4,11 +4,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth, googleProvider } from "@/config/firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, type FirebaseError } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { LogIn, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Simple Google icon component
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!loading && user) {
@@ -35,8 +37,21 @@ export default function LoginPage() {
       await signInWithPopup(auth, googleProvider);
       router.push("/dashboard");
     } catch (error) {
-      console.error("Error signing in with Google:", error);
-      // Handle error (e.g., show a toast message)
+      const firebaseError = error as FirebaseError;
+      console.error("Error signing in with Google:", firebaseError);
+      if (firebaseError.code === "auth/popup-closed-by-user") {
+        toast({
+          title: "Sign-in Cancelled",
+          description: "You closed the sign-in popup. Please try again if you wish to sign in.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Sign-in Failed",
+          description: firebaseError.message || "An unexpected error occurred during sign-in. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsSigningIn(false);
     }
