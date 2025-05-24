@@ -57,16 +57,21 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
     if (user && selectedDate) {
       const dateKey = format(selectedDate, "yyyy-MM-dd");
       const storageKey = getMealLogStorageKey(user.uid);
+      console.log(`Attempting to load meals for date: ${dateKey}, user: ${user.uid}`);
       try {
         const allLogsRaw = localStorage.getItem(storageKey);
         const allLogs = allLogsRaw ? JSON.parse(allLogsRaw) : {};
         const mealsForDate = allLogs[dateKey] || "";
+        console.log(`Loaded meals from localStorage for ${dateKey}: "${mealsForDate}"`);
         form.setValue("loggedMeals", mealsForDate);
+        // You can also log form.getValues("loggedMeals") here to see if RHF state updated
+        // console.log(`RHF loggedMeals value after setValue: "${form.getValues("loggedMeals")}"`);
       } catch (error) {
         console.error("Error loading meals from localStorage:", error);
         form.setValue("loggedMeals", "");
       }
     } else {
+      console.log("User or selectedDate is not available, clearing loggedMeals.");
       form.setValue("loggedMeals", ""); // Clear if no user or date
     }
   }, [selectedDate, user, form]);
@@ -132,11 +137,13 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
       const dateKey = format(selectedDate, "yyyy-MM-dd");
       const storageKey = getMealLogStorageKey(user.uid);
       const allLogsRaw = localStorage.getItem(storageKey);
-      const allLogs = allLogsRaw ? JSON.parse(allLogsRaw) : {};
+      let allLogs = allLogsRaw ? JSON.parse(allLogsRaw) : {}; // Ensure allLogs is mutable
       if (loggedMealsContent.trim() === "") {
-        delete allLogs[dateKey]; // Remove entry if textarea is empty
+        delete allLogs[dateKey]; 
+        console.log(`Cleared meals for date: ${dateKey}`);
       } else {
         allLogs[dateKey] = loggedMealsContent;
+        console.log(`Saved meals for date: ${dateKey}: "${loggedMealsContent}"`);
       }
       localStorage.setItem(storageKey, JSON.stringify(allLogs));
     } catch (error) {
@@ -188,7 +195,7 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
 
   return (
     <div className="space-y-8">
-      <Card>
+      <Card className="bg-gradient-to-br from-card via-muted/10 to-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <NotebookText className="h-6 w-6 text-primary" />
@@ -206,7 +213,6 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
                 selected={selectedDate}
                 onSelect={(date) => {
                   setSelectedDate(date);
-                  // form.reset({ loggedMeals: "" }); // Reset form field for new date, useEffect will load it
                 }}
                 className="rounded-md border shadow-sm bg-card"
                 disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
@@ -233,7 +239,7 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
                             placeholder={`e.g., Breakfast: Oatmeal with berries...\n(Leave empty if you ate nothing on ${selectedDate ? format(selectedDate, "PPP") : 'selected date'})`}
                             className="min-h-[150px]"
                             {...field}
-                            value={field.value || ""} // Ensure controlled component
+                            value={field.value || ""} 
                             disabled={!selectedDate || !user}
                           />
                         </FormControl>
@@ -290,7 +296,7 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
       </Card>
 
       {analysisResult && (
-        <Card>
+        <Card className="bg-gradient-to-br from-card via-muted/10 to-card">
           <CardHeader>
             <CardTitle>Meal Analysis Results for {selectedDate ? format(selectedDate, "PPP") : ""}</CardTitle>
             <CardDescription>These results are based on the meals you logged for the selected date.</CardDescription>
@@ -311,3 +317,5 @@ export function MealLogForm({ userProfile, currentRecommendation }: MealLogFormP
   );
 }
 
+
+    
