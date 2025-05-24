@@ -86,7 +86,12 @@ export function UserProfileForm({ profile, onProfileUpdate }: UserProfileFormPro
                   <FormItem>
                     <FormLabel>Age (years)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Enter your age" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="Enter your age"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -99,7 +104,12 @@ export function UserProfileForm({ profile, onProfileUpdate }: UserProfileFormPro
                   <FormItem>
                     <FormLabel>Weight (kg)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Enter your weight" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="Enter your weight"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

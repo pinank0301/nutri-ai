@@ -123,7 +123,12 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
                   <FormItem>
                     <FormLabel>Age (years)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Your age" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="Your age"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -136,7 +141,12 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
                   <FormItem>
                     <FormLabel>Weight (kg)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="Your weight" {...field} />
+                      <Input
+                        type="number"
+                        placeholder="Your weight"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -236,4 +246,3 @@ export function DietRecommendationForm({ userProfile, onRecommendationGenerated 
     </Card>
   );
 }
-
