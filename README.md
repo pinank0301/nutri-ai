@@ -1,4 +1,4 @@
-"""# 🥗 Nutri AI – Your Smart AI-Powered Meal Planner
+# 🥗 Nutri AI – Your Smart AI-Powered Meal Planner
 
 **Nutri AI** is an intelligent, personalized meal planning assistant that helps you make healthier dietary choices with ease. Powered by AI, Nutri AI analyzes your profile and generates custom diet recommendations. It also includes a powerful meal logging feature to help you track what you eat — date-wise and in detail.
 
