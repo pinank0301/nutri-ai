@@ -47,11 +47,11 @@
 
 ## 🧑‍💻 Tech Stack
 
-- **Frontend:** React / HTML / CSS / JavaScript  
-- **Backend:** Node.js / Express  
-- **Database:** MongoDB / Firebase  
-- **AI Model:** Python (scikit-learn / TensorFlow or GPT-based for recommendations)  
-- **Authentication:** JWT / Firebase Auth
+- **Frontend:** Next.js  
+- **Backend:** Firebase  
+- **Database:** Firebase  
+- **AI Model:** Google Gemini API
+- **Authentication:** Firebase Auth
 
 ---
 
